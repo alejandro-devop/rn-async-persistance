@@ -1,5 +1,5 @@
 {
-  "name": "@alejandro.dev/rn-themizer",
+  "name": "@alejandro.dev/rn-redux-persistance",
   "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
