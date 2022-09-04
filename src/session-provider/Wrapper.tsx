@@ -1,8 +1,8 @@
 import React from 'react'
-import { View } from 'react-native'
+// import { View } from 'react-native'
 
 const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    return <View>{children}</View>
+    return <>{children}</>
 }
 
 export default Wrapper
