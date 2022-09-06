@@ -1,23 +1,28 @@
 import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { View, ScrollView, Text, TouchableOpacity } from 'react-native'
+import styles from './style'
+import classNames from '../../utils/classNames'
+import Button from './Button'
+import StoreDebugger from './store-debugger'
 
 const Debugger: React.FC = () => {
+    const [expanded, setExpanded] = React.useState(true)
     return (
-        <View style={styles.root}>
-            <Text>Session debuger</Text>
+        <View style={classNames({ root: true, rootExpanded: expanded }, styles)}>
+            <View style={styles.titleWrapper}>
+                <Text style={styles.title}>Session debuger</Text>
+                <TouchableOpacity onPress={() => setExpanded(!expanded)}>
+                    <Text>{expanded ? 'Close' : 'Open'}</Text>
+                </TouchableOpacity>
+            </View>
+            <View style={styles.buttonsRow}>
+                <Button>Stores</Button>
+            </View>
+            <ScrollView>
+                <StoreDebugger />
+            </ScrollView>
         </View>
     )
 }
-
-const styles = StyleSheet.create({
-    root: {
-        position: 'absolute',
-        bottom: 0,
-        width: '100%',
-        height: 300,
-        backgroundColor: 'rgba(255,255,255, 0.8)',
-        padding: 20
-    }
-})
 
 export default Debugger

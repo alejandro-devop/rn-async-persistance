@@ -5,7 +5,8 @@ export const SessionContext = React.createContext<SessionContextType>({
     setKey: () => null,
     setAllKeys: () => null,
     removeKey: () => null,
-    clear: () => null
+    clear: () => null,
+    debug: false
 })
 export const SessionContextProvider = SessionContext.Provider
 export const SessionContextConsumer = SessionContext.Consumer

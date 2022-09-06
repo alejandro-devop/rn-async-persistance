@@ -14,5 +14,12 @@ export default {
         }
     ],
     plugins: [typescript({ objectHashIgnoreUnknownHack: true })],
-    external: ['react', 'react-dom', 'react-native']
+    external: [
+        'react',
+        'react-dom',
+        'react-native',
+        'lodash',
+        '@react-native-async-storage/async-storage',
+        'react-native-json-tree'
+    ]
 }
