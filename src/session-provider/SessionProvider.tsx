@@ -58,7 +58,7 @@ const SessionProvider: React.FC<SessionProviderProps> = ({ children, debug }) =>
     /**
      * Function to process the queue of changes
      */
-    const processQueue = React.useCallback(() => {
+    const processQueue = React.useCallback(async () => {
         const queueSize = queue.current.length
         /* If there's a clearing action all the changes previous registered must be deleted */
         let cleared = false
@@ -78,7 +78,15 @@ const SessionProvider: React.FC<SessionProviderProps> = ({ children, debug }) =>
             queue.current = []
             if (!cleared && _.isEqual(prevProps.store, store)) {
             } else {
-                const newStore = cleared ? storeToPersist : { ...store, ...storeToPersist }
+                let previewStore = store
+                try {
+                    const storedStore = await AsyncStorage.getItem('@store')
+                    const parsedStore = JSON.parse(storedStore || '{}')
+                    previewStore = parsedStore
+                } catch {}
+                const newStore = cleared
+                    ? storeToPersist
+                    : { ...previewStore, ...store, ...storeToPersist }
                 setStore(newStore)
                 persistInStore(newStore)
             }
@@ -88,11 +96,14 @@ const SessionProvider: React.FC<SessionProviderProps> = ({ children, debug }) =>
     /**
      * Function to persist the store to the device async storage.
      */
-    const persistInStore = React.useCallback(async (newStore: any) => {
-        try {
-            await AsyncStorage.setItem('@store', JSON.stringify(newStore))
-        } catch {}
-    }, [])
+    const persistInStore = React.useCallback(
+        async (newStore: any) => {
+            try {
+                await AsyncStorage.setItem('@store', JSON.stringify(newStore))
+            } catch {}
+        },
+        [store]
+    )
     /**
      * Function to fetch the current saved data from the local storage.
      */

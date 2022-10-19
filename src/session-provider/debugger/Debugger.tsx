@@ -4,9 +4,11 @@ import styles from './style'
 import classNames from '../../utils/classNames'
 import Button from './Button'
 import StoreDebugger from './store-debugger'
+import { SessionContext } from '../Context'
 
 const Debugger: React.FC = () => {
     const [expanded, setExpanded] = React.useState(true)
+    const { clear } = React.useContext(SessionContext)
     return (
         <View style={classNames({ root: true, rootExpanded: expanded }, styles)}>
             <View style={styles.titleWrapper}>
@@ -17,6 +19,7 @@ const Debugger: React.FC = () => {
             </View>
             <View style={styles.buttonsRow}>
                 <Button>Stores</Button>
+                <Button onPress={() => clear()}>Clear</Button>
             </View>
             <ScrollView>
                 <StoreDebugger />

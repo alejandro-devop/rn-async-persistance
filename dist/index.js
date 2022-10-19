@@ -138,8 +138,8 @@ var classNames = function (names, styles) {
 };
 
 var Button = function (_a) {
-    var children = _a.children;
-    return (React__default.default.createElement(reactNative.TouchableOpacity, null,
+    var children = _a.children, onPress = _a.onPress;
+    return (React__default.default.createElement(reactNative.TouchableOpacity, { onPress: onPress },
         React__default.default.createElement(reactNative.Text, null, children)));
 };
 
@@ -158,13 +158,15 @@ var StoreDebugger = function () {
 
 var Debugger = function () {
     var _a = React__default.default.useState(true), expanded = _a[0], setExpanded = _a[1];
+    var clear = React__default.default.useContext(SessionContext).clear;
     return (React__default.default.createElement(reactNative.View, { style: classNames({ root: true, rootExpanded: expanded }, styles$1) },
         React__default.default.createElement(reactNative.View, { style: styles$1.titleWrapper },
             React__default.default.createElement(reactNative.Text, { style: styles$1.title }, "Session debuger"),
             React__default.default.createElement(reactNative.TouchableOpacity, { onPress: function () { return setExpanded(!expanded); } },
                 React__default.default.createElement(reactNative.Text, null, expanded ? 'Close' : 'Open'))),
         React__default.default.createElement(reactNative.View, { style: styles$1.buttonsRow },
-            React__default.default.createElement(Button, null, "Stores")),
+            React__default.default.createElement(Button, null, "Stores"),
+            React__default.default.createElement(Button, { onPress: function () { return clear(); } }, "Clear")),
         React__default.default.createElement(reactNative.ScrollView, null,
             React__default.default.createElement(StoreDebugger, null))));
 };
@@ -230,33 +232,56 @@ var SessionProvider = function (_a) {
     /**
      * Function to process the queue of changes
      */
-    var processQueue = React__default.default.useCallback(function () {
-        var queueSize = queue.current.length;
-        /* If there's a clearing action all the changes previous registered must be deleted */
-        var cleared = false;
-        if (queueSize > 0) {
-            var storeToPersist = queue.current.reduce(function (newStore, currentItem) {
-                if (currentItem.type === 'key') {
-                    var payload = currentItem.payload;
-                    newStore[payload.key] = payload.value;
-                }
-                if (currentItem.type === 'clear') {
-                    newStore = {};
-                    cleared = true;
-                }
-                return newStore;
-            }, store);
-            /* Once the queue is processded it must be clear it */
-            queue.current = [];
-            if (!cleared && ___default.default.isEqual(prevProps.store, store)) ;
-            else {
-                var newStore = cleared ? storeToPersist : __assign(__assign({}, store), storeToPersist);
-                setStore(newStore);
-                persistInStore(newStore);
+    var processQueue = React__default.default.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
+        var queueSize, cleared, storeToPersist, previewStore, storedStore, parsedStore, newStore;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    queueSize = queue.current.length;
+                    cleared = false;
+                    if (!(queueSize > 0)) return [3 /*break*/, 6];
+                    storeToPersist = queue.current.reduce(function (newStore, currentItem) {
+                        if (currentItem.type === 'key') {
+                            var payload = currentItem.payload;
+                            newStore[payload.key] = payload.value;
+                        }
+                        if (currentItem.type === 'clear') {
+                            newStore = {};
+                            cleared = true;
+                        }
+                        return newStore;
+                    }, store);
+                    /* Once the queue is processded it must be clear it */
+                    queue.current = [];
+                    if (!(!cleared && ___default.default.isEqual(prevProps.store, store))) return [3 /*break*/, 1];
+                    return [3 /*break*/, 6];
+                case 1:
+                    previewStore = store;
+                    _b.label = 2;
+                case 2:
+                    _b.trys.push([2, 4, , 5]);
+                    return [4 /*yield*/, AsyncStorage__default.default.getItem('@store')];
+                case 3:
+                    storedStore = _b.sent();
+                    parsedStore = JSON.parse(storedStore || '{}');
+                    previewStore = parsedStore;
+                    return [3 /*break*/, 5];
+                case 4:
+                    _b.sent();
+                    return [3 /*break*/, 5];
+                case 5:
+                    newStore = cleared
+                        ? storeToPersist
+                        : __assign(__assign(__assign({}, previewStore), store), storeToPersist);
+                    setStore(newStore);
+                    persistInStore(newStore);
+                    _b.label = 6;
+                case 6:
+                    processing.current = false;
+                    return [2 /*return*/];
             }
-        }
-        processing.current = false;
-    }, [store, queue.current, prevProps.store, processing.current]);
+        });
+    }); }, [store, queue.current, prevProps.store, processing.current]);
     /**
      * Function to persist the store to the device async storage.
      */
@@ -275,7 +300,7 @@ var SessionProvider = function (_a) {
                 case 3: return [2 /*return*/];
             }
         });
-    }); }, []);
+    }); }, [store]);
     /**
      * Function to fetch the current saved data from the local storage.
      */
