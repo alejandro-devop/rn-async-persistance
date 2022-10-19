@@ -63,27 +63,38 @@ const SessionProvider: React.FC<SessionProviderProps> = ({ children, debug }) =>
         /* If there's a clearing action all the changes previous registered must be deleted */
         let cleared = false
         if (queueSize > 0) {
-            const storeToPersist = queue.current.reduce((newStore, currentItem) => {
-                if (currentItem.type === 'key') {
-                    const { payload } = currentItem
-                    newStore[payload.key] = payload.value
-                }
-                if (currentItem.type === 'clear') {
-                    newStore = {}
-                    cleared = true
-                }
-                return newStore
-            }, store)
+            const storeToPersist = queue.current.reduce(
+                (newStore, currentItem) => {
+                    if (currentItem.type === 'key') {
+                        const { payload } = currentItem
+                        newStore[payload.key] = payload.value
+                    }
+                    if (currentItem.type === 'all') {
+                        const { payload } = currentItem
+                        console.log('Processing... all', payload)
+                        newStore = { ...newStore, ...payload }
+                    }
+                    if (currentItem.type === 'clear') {
+                        newStore = {}
+                        cleared = true
+                    }
+                    return newStore
+                },
+                { ...store }
+            )
             /* Once the queue is processded it must be clear it */
             queue.current = []
-            if (!cleared && _.isEqual(prevProps.store, store)) {
+            if (!cleared && _.isEqual(prevProps.store, storeToPersist)) {
+                console.log('======= No changes ======')
             } else {
-                let previewStore = store
+                let previewStore = {}
                 try {
                     const storedStore = await AsyncStorage.getItem('@store')
                     const parsedStore = JSON.parse(storedStore || '{}')
                     previewStore = parsedStore
-                } catch {}
+                } catch {
+                    previewStore = { ...store }
+                }
                 const newStore = cleared
                     ? storeToPersist
                     : { ...previewStore, ...store, ...storeToPersist }
@@ -126,7 +137,16 @@ const SessionProvider: React.FC<SessionProviderProps> = ({ children, debug }) =>
         }
     }, [queue.current, store, rehydrated])
 
-    const setAllKeys = () => {}
+    const setAllKeys = React.useCallback(
+        (keys: { [key: string]: any }) => {
+            queue.current.push({ type: 'all', payload: keys })
+            if (!processing.current) {
+                processing.current = true
+                processQueue()
+            }
+        },
+        [store]
+    )
     const removeKey = () => {}
     return (
         <Wrapper>

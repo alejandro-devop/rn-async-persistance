@@ -245,18 +245,24 @@ var SessionProvider = function (_a) {
                             var payload = currentItem.payload;
                             newStore[payload.key] = payload.value;
                         }
+                        if (currentItem.type === 'all') {
+                            var payload = currentItem.payload;
+                            console.log('Processing... all', payload);
+                            newStore = __assign(__assign({}, newStore), payload);
+                        }
                         if (currentItem.type === 'clear') {
                             newStore = {};
                             cleared = true;
                         }
                         return newStore;
-                    }, store);
+                    }, __assign({}, store));
                     /* Once the queue is processded it must be clear it */
                     queue.current = [];
-                    if (!(!cleared && ___default.default.isEqual(prevProps.store, store))) return [3 /*break*/, 1];
+                    if (!(!cleared && ___default.default.isEqual(prevProps.store, storeToPersist))) return [3 /*break*/, 1];
+                    console.log('======= No changes ======');
                     return [3 /*break*/, 6];
                 case 1:
-                    previewStore = store;
+                    previewStore = {};
                     _b.label = 2;
                 case 2:
                     _b.trys.push([2, 4, , 5]);
@@ -268,6 +274,7 @@ var SessionProvider = function (_a) {
                     return [3 /*break*/, 5];
                 case 4:
                     _b.sent();
+                    previewStore = __assign({}, store);
                     return [3 /*break*/, 5];
                 case 5:
                     newStore = cleared
@@ -333,7 +340,13 @@ var SessionProvider = function (_a) {
             rehydrate();
         }
     }, [queue.current, store, rehydrated]);
-    var setAllKeys = function () { };
+    var setAllKeys = React__default.default.useCallback(function (keys) {
+        queue.current.push({ type: 'all', payload: keys });
+        if (!processing.current) {
+            processing.current = true;
+            processQueue();
+        }
+    }, [store]);
     var removeKey = function () { };
     return (React__default.default.createElement(Wrapper, null,
         React__default.default.createElement(SessionContextProvider, { value: {
