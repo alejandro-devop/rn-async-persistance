@@ -3,26 +3,17 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var React = require('react');
-var reactNative = require('react-native');
-var JSONTree = require('react-native-json-tree');
-var _ = require('lodash');
+var reactRedux = require('react-redux');
+var toolkit = require('@reduxjs/toolkit');
+var redux = require('redux');
 var AsyncStorage = require('@react-native-async-storage/async-storage');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { default: e }; }
 
 var React__default = /*#__PURE__*/_interopDefaultLegacy(React);
-var JSONTree__default = /*#__PURE__*/_interopDefaultLegacy(JSONTree);
-var ___default = /*#__PURE__*/_interopDefaultLegacy(_);
 var AsyncStorage__default = /*#__PURE__*/_interopDefaultLegacy(AsyncStorage);
 
-var SessionContext = React__default.default.createContext({
-    store: {},
-    setKey: function () { return null; },
-    setAllKeys: function () { return null; },
-    removeKey: function () { return null; },
-    clear: function () { return null; },
-    debug: false
-});
+var SessionContext = React__default.default.createContext({});
 var SessionContextProvider = SessionContext.Provider;
 SessionContext.Consumer;
 
@@ -95,272 +86,142 @@ function __generator(thisArg, body) {
     }
 }
 
-// import { View } from 'react-native'
-var Wrapper = function (_a) {
-    var children = _a.children;
-    return React__default.default.createElement(React__default.default.Fragment, null, children);
-};
-
-var styles$1 = reactNative.StyleSheet.create({
-    root: {
-        position: 'absolute',
-        bottom: 0,
-        width: '100%',
-        height: 40,
-        backgroundColor: 'rgba(255,255,255, 0.8)'
-    },
-    rootExpanded: {
-        height: '30%'
-    },
-    titleWrapper: {
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        flexDirection: 'row'
-    },
-    title: {
-        flex: 1,
-        fontSize: 22
-    },
-    buttonsRow: {
-        flexDirection: 'row',
-        paddingHorizontal: 20
-    }
-});
-
-var classNames = function (names, styles) {
-    var resultedClasses = Object.keys(names).reduce(function (result, currentKey) {
-        if (names[currentKey] === true) {
-            result.push(styles[currentKey]);
+var getReducer = (function (initialState) {
+    return function (state, action) {
+        var _a, _b;
+        if (state === void 0) { state = initialState; }
+        var type = action.type, payload = action.payload;
+        var _c = payload || {}, key = _c.key, data = _c.data;
+        switch (type) {
+            case '@store/set-key':
+                return __assign(__assign({}, state), (_a = {}, _a[key] = data, _a));
+            case '@store/del-key':
+                return __assign(__assign({}, state), (_b = {}, _b[key] = null, _b));
+            case '@store/set-all':
+                return __assign(__assign({}, state), payload);
+            default:
+                return state;
         }
-        return result;
-    }, []);
-    return resultedClasses;
-};
-
-var Button = function (_a) {
-    var children = _a.children, onPress = _a.onPress;
-    return (React__default.default.createElement(reactNative.TouchableOpacity, { onPress: onPress },
-        React__default.default.createElement(reactNative.Text, null, children)));
-};
-
-var styles = reactNative.StyleSheet.create({
-    root: {
-        flex: 1
-    }
+    };
 });
 
-var StoreDebugger = function () {
-    var store = React__default.default.useContext(SessionContext).store;
-    return (React__default.default.createElement(reactNative.View, { style: styles.root },
-        React__default.default.createElement(reactNative.Text, null, "Current store"),
-        React__default.default.createElement(JSONTree__default.default, { hideRoot: true, data: store })));
+var ReduxWrapper = function (_a) {
+    var children = _a.children, initialState = _a.initialState;
+    var store = toolkit.configureStore({ reducer: redux.combineReducers({ store: getReducer(initialState) }) });
+    var timesControl = null;
+    var onStateChanged = React__default.default.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
+        var newStore;
+        return __generator(this, function (_a) {
+            newStore = store.getState();
+            try {
+                console.log('Updating the state.');
+                AsyncStorage__default.default.setItem('@store', JSON.stringify(newStore === null || newStore === void 0 ? void 0 : newStore.store));
+            }
+            catch (_b) { }
+            return [2 /*return*/];
+        });
+    }); }, [store]);
+    store.subscribe(function () { return __awaiter(void 0, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            clearTimeout(timesControl);
+            timesControl = setTimeout(function () {
+                onStateChanged();
+            }, 200);
+            return [2 /*return*/];
+        });
+    }); });
+    React__default.default.useEffect(function () {
+        return function () {
+            clearTimeout(timesControl);
+        };
+    }, [timesControl]);
+    return React__default.default.createElement(reactRedux.Provider, { store: store }, children);
+};
+ReduxWrapper.defaultProps = {
+    initialState: {
+        logged: false
+    }
 };
 
 var Debugger = function () {
-    var _a = React__default.default.useState(true), expanded = _a[0], setExpanded = _a[1];
-    var clear = React__default.default.useContext(SessionContext).clear;
-    return (React__default.default.createElement(reactNative.View, { style: classNames({ root: true, rootExpanded: expanded }, styles$1) },
-        React__default.default.createElement(reactNative.View, { style: styles$1.titleWrapper },
-            React__default.default.createElement(reactNative.Text, { style: styles$1.title }, "Session debuger"),
-            React__default.default.createElement(reactNative.TouchableOpacity, { onPress: function () { return setExpanded(!expanded); } },
-                React__default.default.createElement(reactNative.Text, null, expanded ? 'Close' : 'Open'))),
-        React__default.default.createElement(reactNative.View, { style: styles$1.buttonsRow },
-            React__default.default.createElement(Button, null, "Stores"),
-            React__default.default.createElement(Button, { onPress: function () { return clear(); } }, "Clear")),
-        React__default.default.createElement(reactNative.ScrollView, null,
-            React__default.default.createElement(StoreDebugger, null))));
+    return React__default.default.createElement(React__default.default.Fragment, null);
 };
 
-var usePrevProps = function (value) {
-    var ref = React.useRef();
-    React__default.default.useEffect(function () {
-        ref.current = value;
-    });
-    return (ref.current || {});
-};
+var setKey = function (key, data) { return ({
+    type: '@store/set-key',
+    payload: {
+        key: key,
+        data: data
+    }
+}); };
+var setAll = function (keys) { return ({
+    type: '@store/set-all',
+    payload: keys
+}); };
 
-var LoadingScreen = function () {
-    return (React__default.default.createElement(reactNative.View, { style: { flex: 1, justifyContent: 'center', alignItems: 'center' } },
-        React__default.default.createElement(reactNative.Text, null, "Loading")));
+var SessionDriver = function (_a) {
+    var children = _a.children;
+    var store = reactRedux.useSelector(function (state) { return state.store; });
+    var dispatch = reactRedux.useDispatch();
+    var handleSetKey = function (key, value) { return __awaiter(void 0, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            dispatch(setKey(key, value));
+            return [2 /*return*/];
+        });
+    }); };
+    var handleRemoveKey = function () { };
+    var handleSetAllKeys = function (keys) {
+        dispatch(setAll(keys));
+    };
+    var handleClear = function () { };
+    return (React__default.default.createElement(SessionContextProvider, { value: {
+            store: store,
+            setKey: handleSetKey,
+            setAllKeys: handleSetAllKeys,
+            removeKey: handleRemoveKey,
+            clear: handleClear,
+            debug: false
+        } }, children));
 };
 
 /**
- * Component to wrapp the session logic and pass it to the whole appliation
- * @author Alejandro Quiroz <alejandro.devop@gmail.com>
- * @version 1.0.0
+ * Loads async storage and data and initializes the redux store
  * @param param0
  * @returns
  */
-var SessionProvider = function (_a) {
-    var children = _a.children, debug = _a.debug;
-    var _b = React__default.default.useState({}), store = _b[0], setStore = _b[1];
-    var _c = React__default.default.useState(false), rehydrated = _c[0], setRehydrated = _c[1];
-    var _d = React__default.default.useState(false), loaded = _d[0], setLoaded = _d[1];
-    // const [storeActions, setStoreActions] = React.useState([])
-    /**
-     * This queue stores the actions to be executed by the session on the next frame
-     */
-    var queue = React__default.default.useRef([]);
-    /**
-     * Saving the previews store state help us to track the changes on the current frame
-     */
-    var prevProps = usePrevProps({ store: store, queue: queue.current });
-    /**
-     * A flag to lock the queue process
-     */
-    var processing = React__default.default.useRef(false);
-    /**
-     * Function to update the state key by key
-     */
-    var setKey = React__default.default.useCallback(function (key, value) {
-        queue.current.push({ type: 'key', payload: { key: key, value: value } });
-        if (!processing.current) {
-            processing.current = true;
-            processQueue();
-        }
-    }, [store]);
-    /**
-     * Function to trigger the session clearing
-     */
-    var clear = React__default.default.useCallback(function () {
-        queue.current.push({ type: 'clear', payload: {} });
-        if (!processing.current) {
-            processing.current = true;
-            processQueue();
-        }
-    }, [store]);
-    /**
-     * Function to process the queue of changes
-     */
-    var processQueue = React__default.default.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
-        var queueSize, cleared, storeToPersist, previewStore, storedStore, parsedStore, newStore;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0:
-                    queueSize = queue.current.length;
-                    cleared = false;
-                    if (!(queueSize > 0)) return [3 /*break*/, 6];
-                    storeToPersist = queue.current.reduce(function (newStore, currentItem) {
-                        if (currentItem.type === 'key') {
-                            var payload = currentItem.payload;
-                            newStore[payload.key] = payload.value;
-                        }
-                        if (currentItem.type === 'all') {
-                            var payload = currentItem.payload;
-                            console.log('Processing... all', payload);
-                            newStore = __assign(__assign({}, newStore), payload);
-                        }
-                        if (currentItem.type === 'clear') {
-                            newStore = {};
-                            cleared = true;
-                        }
-                        return newStore;
-                    }, __assign({}, store));
-                    /* Once the queue is processded it must be clear it */
-                    queue.current = [];
-                    if (!(!cleared && ___default.default.isEqual(prevProps.store, storeToPersist))) return [3 /*break*/, 1];
-                    console.log('======= No changes ======');
-                    return [3 /*break*/, 6];
+var ReduxSessionProvider = function (_a) {
+    var children = _a.children;
+    //Load the session from the async storage
+    var _b = React__default.default.useState({}), persistedData = _b[0], setPersistedData = _b[1];
+    var _c = React__default.default.useState(false), loaded = _c[0], setLoaded = _c[1];
+    var getData = React__default.default.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
+        var storedStore, parsedStore;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, AsyncStorage__default.default.getItem('@store')];
                 case 1:
-                    previewStore = {};
-                    _b.label = 2;
-                case 2:
-                    _b.trys.push([2, 4, , 5]);
-                    return [4 /*yield*/, AsyncStorage__default.default.getItem('@store')];
-                case 3:
-                    storedStore = _b.sent();
+                    storedStore = _a.sent();
                     parsedStore = JSON.parse(storedStore || '{}');
-                    previewStore = parsedStore;
-                    return [3 /*break*/, 5];
-                case 4:
-                    _b.sent();
-                    previewStore = __assign({}, store);
-                    return [3 /*break*/, 5];
-                case 5:
-                    newStore = cleared
-                        ? storeToPersist
-                        : __assign(__assign(__assign({}, previewStore), store), storeToPersist);
-                    setStore(newStore);
-                    persistInStore(newStore);
-                    _b.label = 6;
-                case 6:
-                    processing.current = false;
+                    setPersistedData(parsedStore);
+                    setLoaded(true);
                     return [2 /*return*/];
             }
         });
-    }); }, [store, queue.current, prevProps.store, processing.current]);
-    /**
-     * Function to persist the store to the device async storage.
-     */
-    var persistInStore = React__default.default.useCallback(function (newStore) { return __awaiter(void 0, void 0, void 0, function () {
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0:
-                    _b.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, AsyncStorage__default.default.setItem('@store', JSON.stringify(newStore))];
-                case 1:
-                    _b.sent();
-                    return [3 /*break*/, 3];
-                case 2:
-                    _b.sent();
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
-            }
-        });
-    }); }, [store]);
-    /**
-     * Function to fetch the current saved data from the local storage.
-     */
-    var rehydrate = React__default.default.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
-        var storedStore, parsedStore;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0:
-                    _b.trys.push([0, 2, 3, 4]);
-                    return [4 /*yield*/, AsyncStorage__default.default.getItem('@store')];
-                case 1:
-                    storedStore = _b.sent();
-                    parsedStore = JSON.parse(storedStore || '{}');
-                    setStore(parsedStore);
-                    setRehydrated(true);
-                    return [3 /*break*/, 4];
-                case 2:
-                    _b.sent();
-                    setStore({});
-                    return [3 /*break*/, 4];
-                case 3:
-                    setLoaded(true);
-                    return [7 /*endfinally*/];
-                case 4: return [2 /*return*/];
-            }
-        });
-    }); }, []);
+    }); }, [setPersistedData]);
     React__default.default.useEffect(function () {
-        if (!rehydrated) {
-            rehydrate();
+        if (!loaded) {
+            getData();
         }
-    }, [queue.current, store, rehydrated]);
-    var setAllKeys = React__default.default.useCallback(function (keys) {
-        queue.current.push({ type: 'all', payload: keys });
-        if (!processing.current) {
-            processing.current = true;
-            processQueue();
-        }
-    }, [store]);
-    var removeKey = function () { };
-    return (React__default.default.createElement(Wrapper, null,
-        React__default.default.createElement(SessionContextProvider, { value: {
-                store: store,
-                setKey: setKey,
-                setAllKeys: setAllKeys,
-                removeKey: removeKey,
-                clear: clear,
-                debug: debug
-            } },
-            loaded ? children : React__default.default.createElement(LoadingScreen, null),
-            debug && React__default.default.createElement(Debugger, null))));
+    }, [loaded]);
+    if (!loaded) {
+        return React__default.default.createElement(React__default.default.Fragment, null);
+    }
+    return (React__default.default.createElement(ReduxWrapper, { initialState: persistedData },
+        React__default.default.createElement(SessionDriver, null,
+            children,
+            React__default.default.createElement(Debugger, null))));
 };
 
-exports.SessionProvider = SessionProvider;
+exports.SessionProvider = ReduxSessionProvider;
 exports.useSession = useSession;
 //# sourceMappingURL=index.js.map

@@ -20,6 +20,9 @@ export default {
         'react-native',
         'lodash',
         '@react-native-async-storage/async-storage',
-        'react-native-json-tree'
+        'react-native-json-tree',
+        'react-redux',
+        '@reduxjs/toolkit',
+        'redux'
     ]
 }
